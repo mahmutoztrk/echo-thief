@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Echo Thief</title>
+    <style>
+        body {
+            margin: 0;
+            background-color: #0c0c0c;
+            color: #fff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            padding: 20px 0;
+            overflow-y: auto;
+            position: relative;
+        }
+        /* Sağ Üst Sohbet Butonu */
+        .chat-link-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: #1a1a1a;
+            color: #55aaff;
+            border: 1px solid #333;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: bold;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            z-index: 10;
+        }
+        .chat-link-btn:hover {
+            background-color: #222;
+            border-color: #55aaff;
+            color: #77ccff;
+        }
+        h1 {
+            margin: 5px 0;
+            font-size: 24px;
+            letter-spacing: 2px;
+            color: #ddd;
+        }
+        .subtitle {
+            margin: 0 0 15px 0;
+            font-size: 13px;
+            color: #777;
+        }
+        canvas {
+            border: 2px solid #333;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+            background-color: #111;
+            cursor: pointer;
+            display: block;
+        }
+        /* Oyun Alanının Altındaki Bilgi Butonu Stili */
+        .info-toggle-btn {
+            width: 600px;
+            margin-top: 15px;
+            background-color: #1a1a1a;
+            color: #55aaff;
+            border: 1px solid #333;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s ease;
+            box-sizing: border-box;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+        .info-toggle-btn:hover {
+            background-color: #222;
+            border-color: #55aaff;
+            color: #77ccff;
+        }
+        /* Açılır-Kapanır Bilgilendirme Alanı */
+        .info-container {
+            display: none; /* Başlangıçta gizli */
+            width: 600px;
+            margin-top: 10px;
+            background-color: #161616;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 15px 20px;
+            box-sizing: border-box;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+        }
+        .info-container.active {
+            display: block; /* Butona basılınca açılır */
+        }
+        .info-section {
+            margin-bottom: 12px;
+        }
+        .info-section:last-child {
+            margin-bottom: 0;
+        }
+        .info-section h3 {
+            margin: 0 0 5px 0;
+            font-size: 14px;
+            color: #55aaff;
+            letter-spacing: 1px;
+        }
+        .info-section p, .info-section ul {
+            margin: 0;
+            font-size: 12px;
+            color: #aaa;
+            line-height: 1.5;
+        }
+        .info-section ul {
+            padding-left: 18px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sağ Üst Sohbet Bağlantı Butonu -->
+    <a href="https://gemini.google.com/app/f96aa651607aa2c4" target="_blank" class="chat-link-btn">💬 Sohbet Geçmişi</a>
+
+    <h1>ECHO THIEF</h1>
+    <div class="subtitle">Karanlıkta Seslerle Yolunu Bul</div>
+    
+    <!-- Oyun Alanı -->
+    <canvas id="gameCanvas" width="600" height="400"></canvas>
+
+    <!-- Oyna Butonunun (Oyun Alanının) Hemen Altındaki Açma/Kapama Butonu -->
+    <button class="info-toggle-btn" id="infoToggleBtn">📖 Oyunun İçeriği ve İlham Alınan Oyunlar</button>
+
+    <!-- Butona Basınca Açılıp Kapanan Bilgilendirme Alanı -->
+    <div class="info-container" id="infoContainer">
+        <div class="info-section">
+            <h3>OYUNUN İÇERİĞİ & NASIL OYNANIR?</h3>
+            <p>Zifiri karanlık bir müzede Ay Taşı'nı çalmaya çalışan bir hırsızı kontrol edersin. Ekrana basılı tutarak hareket ettiğin her an etrafa ses dalgaları yayarsın. Bu dalgalar bir sonar gibi duvarları ve devriye gezen muhafızları anlık olarak görmeni sağlar. Kırmızı muhafızlara yakalanmadan yeşil çıkış kapısına ulaşmalısın.</p>
+        </div>
+        
+        <div class="info-section">
+            <h3>İLHAM ALINAN OYUNLAR</h3>
+            <ul>
+                <li><strong>Flappy Bird:</strong> Tek tuşla / fare kontrolüyle sağlanan akıcı, odaklanma gerektiren sade mekanik hissi.</li>
+                <li><strong>Subway Surfers:</strong> Tehlikeli takipçilerden (muhafızlardan) ve engellerden kaçış temposu.</li>
+                <li><strong>Pac-Man:</strong> Labirent benzeri koridorlarda gezinirken tehlikelerden saklanarak ilerleme mantığı.</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Oyun Bilgileri Butonu Aç/Kapat Mantığı
+        const infoToggleBtn = document.getElementById("infoToggleBtn");
+        const infoContainer = document.getElementById("infoContainer");
+
+        infoToggleBtn.addEventListener("click", () => {
+            infoContainer.classList.toggle("active");
+            if (infoContainer.classList.contains("active")) {
+                infoToggleBtn.textContent = "📖 Bilgileri Gizle";
+            } else {
+                infoToggleBtn.textContent = "📖 Oyunun İçeriği ve İlham Alınan Oyunlar";
+            }
+        });
+
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        // Oyun Durumu
+        let gameState = "start"; // start, playing, win, gameover
+
+        // Hırsız (Oyuncu)
+        const player = {
+            x: 50,
+            y: 200,
+            radius: 8,
+            speed: 2.2,
+            targetX: 50,
+            targetY: 200,
+            isMoving: false
+        };
+
+        // Çıkış Kapısı
+        const exit = {
+            x: 550,
+            y: 350,
+            width: 30,
+            height: 40
+        };
+
+        // Ses Dalgaları (Sonar)
+        let soundWaves = [];
+
+        // Duvarlar (Labirent / Müze Koridorları)
+        const walls = [
+            { x: 120, y: 0, width: 20, height: 280 },
+            { x: 240, y: 120, width: 20, height: 280 },
+            { x: 360, y: 0, width: 20, height: 260 },
+            { x: 450, y: 140, width: 100, height: 20 }
+        ];
+
+        // Muhafızlar
+        const guards = [
+            { x: 180, y: 80, minX: 150, maxX: 320, speed: 1.5, dir: 1 },
+            { x: 300, y: 320, minX: 280, maxX: 520, speed: 1.2, dir: -1 }
+        ];
+
+        // Fare Kontrolü
+        let isMouseDown = false;
+
+        canvas.addEventListener("mousedown", (e) => {
+            if (gameState === "start" || gameState === "win" || gameState === "gameover") {
+                resetGame();
+                gameState = "playing";
+                return;
+            }
+            isMouseDown = true;
+        });
+
+        window.addEventListener("mouseup", () => {
+            isMouseDown = false;
+        });
+
+        canvas.addEventListener("mousemove", (e) => {
+            if (!isMouseDown || gameState !== "playing") return;
+            const rect = canvas.getBoundingClientRect();
+            player.targetX = e.clientX - rect.left;
+            player.targetY = e.clientY - rect.top;
+        });
+
+        function resetGame() {
+            player.x = 50;
+            player.y = 200;
+            player.targetX = 50;
+            player.targetY = 200;
+            soundWaves = [];
+            guards[0].x = 180;
+            guards[1].x = 300;
+        }
+
+        // Çarpışma Kontrolü (Basit AABB - Duvar)
+        function checkWallCollision(nx, ny) {
+            for (let w of walls) {
+                if (nx > w.x - player.radius && nx < w.x + w.width + player.radius &&
+                    ny > w.y - player.radius && ny < w.y + w.height + player.radius) {
+                    return true;
+                }
+            }
+            if (nx < 0 || nx > canvas.width || ny < 0 || ny > canvas.height) return true;
+            return false;
+        }
+
+        // Güncelleme Döngüsü
+        function update() {
+            if (gameState !== "playing") return;
+
+            player.isMoving = isMouseDown;
+
+            if (player.isMoving) {
+                let dx = player.targetX - player.x;
+                let dy = player.targetY - player.y;
+                let dist = Math.hypot(dx, dy);
+
+                if (dist > 1) {
+                    let vx = (dx / dist) * player.speed;
+                    let vy = (dy / dist) * player.speed;
+
+                    if (!checkWallCollision(player.x + vx, player.y)) player.x += vx;
+                    if (!checkWallCollision(player.x, player.y + vy)) player.y += vy;
+                }
+
+                // Periyodik ses dalgası yayma
+                if (Math.random() < 0.15) {
+                    soundWaves.push({ x: player.x, y: player.y, radius: 10, maxRadius: 120, alpha: 1 });
+                }
+            }
+
+            // Ses dalgalarını büyüt
+            for (let i = soundWaves.length - 1; i >= 0; i--) {
+                let wave = soundWaves[i];
+                wave.radius += 2.5;
+                wave.alpha = 1 - (wave.radius / wave.maxRadius);
+                if (wave.radius >= wave.maxRadius) {
+                    soundWaves.splice(i, 1);
+                }
+            }
+
+            // Muhafızları hareket ettir
+            for (let g of guards) {
+                g.x += g.speed * g.dir;
+                if (g.x < g.minX || g.x > g.maxX) {
+                    g.dir *= -1;
+                }
+
+                // Yakalanma Kontrolü
+                let distToGuard = Math.hypot(player.x - g.x, player.y - g.y);
+                if (distToGuard < player.radius + 12) {
+                    gameState = "gameover";
+                }
+            }
+
+            // Çıkış Kapısı Kontrolü
+            if (player.x > exit.x && player.x < exit.x + exit.width &&
+                player.y > exit.y && player.y < exit.y + exit.height) {
+                gameState = "win";
+            }
+        }
+
+        // Çizim Döngüsü
+        function draw() {
+            ctx.fillStyle = "#090909";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            if (gameState === "start") {
+                ctx.fillStyle = "#fff";
+                ctx.font = "20px Segoe UI";
+                ctx.textAlign = "center";
+                ctx.fillText("OYUNA BAŞLAMAK İÇİN TIKLA", canvas.width / 2, canvas.height / 2 - 10);
+                ctx.font = "14px Segoe UI";
+                ctx.fillStyle = "#888";
+                ctx.fillText("Basılı tutarak hırsızı yönlendir ve çıkışa ulaş.", canvas.width / 2, canvas.height / 2 + 20);
+                return;
+            }
+
+            if (gameState === "gameover") {
+                ctx.fillStyle = "#ff4444";
+                ctx.font = "24px Segoe UI";
+                ctx.textAlign = "center";
+                ctx.fillText("YAKALANDIN!", canvas.width / 2, canvas.height / 2 - 15);
+                ctx.font = "14px Segoe UI";
+                ctx.fillStyle = "#aaa";
+                ctx.fillText("Tekrar denemek için tıkla.", canvas.width / 2, canvas.height / 2 + 15);
+                return;
+            }
+
+            if (gameState === "win") {
+                ctx.fillStyle = "#44ff44";
+                ctx.font = "24px Segoe UI";
+                ctx.textAlign = "center";
+                ctx.fillText("TEBRİKLER! AY TAŞINI ÇALDIN!", canvas.width / 2, canvas.height / 2 - 15);
+                ctx.font = "14px Segoe UI";
+                ctx.fillStyle = "#aaa";
+                ctx.fillText("Yeniden oynamak için tıkla.", canvas.width / 2, canvas.height / 2 + 15);
+                return;
+            }
+
+            // Çıkış Kapısını Çiz (Yalnızca ses dalgası dokunduğunda görünür)
+            for (let wave of soundWaves) {
+                let distToExit = Math.hypot(exit.x + exit.width/2 - wave.x, exit.y + exit.height/2 - wave.y);
+                if (Math.abs(distToExit - wave.radius) < 25) {
+                    ctx.fillStyle = `rgba(0, 255, 100, ${wave.alpha})`;
+                    ctx.fillRect(exit.x, exit.y, exit.width, exit.height);
+                }
+            }
+
+            // Duvarları Çiz (Sonar efekti)
+            for (let w of walls) {
+                for (let wave of soundWaves) {
+                    let cx = w.x + w.width / 2;
+                    let cy = w.y + w.height / 2;
+                    let dist = Math.hypot(cx - wave.x, cy - wave.y);
+                    
+                    if (Math.abs(dist - wave.radius) < 30) {
+                        ctx.fillStyle = `rgba(100, 150, 255, ${wave.alpha * 0.7})`;
+                        ctx.fillRect(w.x, w.y, w.width, w.height);
+                    }
+                }
+            }
+
+            // Muhafızları Çiz
+            for (let g of guards) {
+                for (let wave of soundWaves) {
+                    let dist = Math.hypot(g.x - wave.x, g.y - wave.y);
+                    if (Math.abs(dist - wave.radius) < 25) {
+                        ctx.fillStyle = `rgba(255, 50, 50, ${wave.alpha})`;
+                        ctx.beginPath();
+                        ctx.arc(g.x, g.y, 10, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+            }
+
+            // Ses Dalgalarını Çiz
+            for (let wave of soundWaves) {
+                ctx.strokeStyle = `rgba(255, 255, 255, ${wave.alpha * 0.4})`;
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.arc(wave.x, wave.y, wave.radius, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+
+            // Hırsızın Kendisi
+            ctx.fillStyle = player.isMoving ? "#00ffff" : "#008888";
+            ctx.beginPath();
+            ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Ana Oyun Döngüsü
+        function loop() {
+            update();
+            draw();
+            requestAnimationFrame(loop);
+        }
+
+        loop();
+    </script>
+</body>
+</html>
